@@ -5,26 +5,25 @@ const cors = require('cors');
 const app = express();
 const port = 3000;
 
-// Middleware
-app.use(cors());
+// ✅ Middleware
+app.use(cors()); // Allow requests from frontend
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Debug Logger
+// ✅ Debug Logger
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.url}`);
   next();
 });
 
-// MySQL Connection
+// ✅ MySQL Connection
 const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'levaku@2000',  // Update this if needed
+  password: 'levaku@2000',
   database: 'retail'
 });
 
-// Connect to DB
 db.connect((err) => {
   if (err) {
     console.error('DB connection failed:', err);
@@ -33,7 +32,7 @@ db.connect((err) => {
   console.log('✅ Connected to MySQL database');
 });
 
-// ===================== SIGNUP ROUTE =====================
+// ✅ Signup Route
 app.post('/signup', (req, res) => {
   const { fullname, email, password, confirmPassword } = req.body;
 
@@ -51,7 +50,7 @@ app.post('/signup', (req, res) => {
   });
 });
 
-// ===================== LOGIN ROUTE =====================
+// ✅ Login Route
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -70,7 +69,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-// ===================== CONTACT ROUTE =====================
+// ✅ Contact Route
 app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
 
@@ -89,7 +88,7 @@ app.post('/contact', (req, res) => {
   });
 });
 
-// ===================== START SERVER =====================
-app.listen(3000, '0.0.0.0', () => {
-  console.log("Server running on 0.0.0.0:3000");
+// ✅ Start Server on EC2 (Public Access)
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Server running on 0.0.0.0:${port}`);
 });
