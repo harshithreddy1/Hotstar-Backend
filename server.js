@@ -1,29 +1,34 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const bodyParser = require("body-parser");
+const path = require("path");
 
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
-// ✅ Middleware
-app.use(cors()); // Allow requests from frontend
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// Middleware
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-// ✅ Debug Logger
+// Debug Logger
 app.use((req, res, next) => {
   console.log(`[${req.method}] ${req.url}`);
   next();
 });
 
-// ✅ MySQL Connection
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+// MySQL Connection
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'levaku@2000',
-  database: 'retail'
+  host: 'threetier-db.calmws2s40q8.us-east-1.rds.amazonaws.com',
+  user: 'harshith',
+  password: 'harshithreddy',  // Update this if needed
+  database: 'appdb'
 });
 
+// Connect to DB
 db.connect((err) => {
   if (err) {
     console.error('DB connection failed:', err);
@@ -32,7 +37,11 @@ db.connect((err) => {
   console.log('✅ Connected to MySQL database');
 });
 
-// ✅ Signup Route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/signup.html"));
+});
+
+// ===================== SIGNUP ROUTE =====================
 app.post('/signup', (req, res) => {
   const { fullname, email, password, confirmPassword } = req.body;
 
@@ -40,7 +49,7 @@ app.post('/signup', (req, res) => {
     return res.status(400).json({ error: 'Passwords do not match' });
   }
 
-  const sql = 'INSERT INTO hotstar_signups (fullname, email, password) VALUES (?, ?, ?)';
+  const sql = 'INSERT INTO signup (fullname, email, password) VALUES (?, ?, ?)';
   db.query(sql, [fullname, email, password], (err, result) => {
     if (err) {
       console.error('Error inserting signup:', err);
@@ -50,11 +59,11 @@ app.post('/signup', (req, res) => {
   });
 });
 
-// ✅ Login Route
+// ===================== LOGIN ROUTE =====================
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
-  const sql = 'SELECT * FROM hotstar_signups WHERE email = ? AND password = ?';
+  const sql = 'SELECT * FROM signup WHERE email = ? AND password = ?';
   db.query(sql, [email, password], (err, results) => {
     if (err) {
       console.error('Login error:', err);
@@ -69,7 +78,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-// ✅ Contact Route
+// ===================== CONTACT ROUTE =====================
 app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
 
@@ -77,7 +86,7 @@ app.post('/contact', (req, res) => {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
-  const sql = 'INSERT INTO hotstar_contacts (name, email, message) VALUES (?, ?, ?)';
+  const sql = 'INSERT INTO contact (name, email, message) VALUES (?, ?, ?)';
   db.query(sql, [name, email, message], (err, result) => {
     if (err) {
       console.error('Error inserting contact message:', err);
@@ -88,7 +97,7 @@ app.post('/contact', (req, res) => {
   });
 });
 
-// ✅ Start Server on EC2 (Public Access)
-app.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Server running on 0.0.0.0:${port}`);
+// ===================== START SERVER =====================
+app.listen(PORT,'0.0.0.0', () => {
+  console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
