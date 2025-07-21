@@ -37,6 +37,29 @@ db.connect((err) => {
   console.log('✅ Connected to MySQL database');
 });
 
+// ------------------ HEALTH ENDPOINTS ------------------
+
+// Basic liveness check for Load Balancer health checks.
+// Always responds quickly with 200 OK if Node process + network stack are up.
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// Optional deeper readiness check: verifies DB connectivity.
+// DO NOT point ALB health checks here if DB outages would cause scale-out thrash.
+app.get('/ready', (req, res) => {
+  db.ping((err) => {
+    if (err) {
+      console.error('DB ping failed:', err);
+      return res.status(500).send('DB error');
+    }
+    res.status(200).send('READY');
+  });
+});
+
+// ------------------------------------------------------
+
+// Serve main page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/signup.html"));
 });
@@ -98,6 +121,6 @@ app.post('/contact', (req, res) => {
 });
 
 // ===================== START SERVER =====================
-app.listen(PORT,'0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
 });
